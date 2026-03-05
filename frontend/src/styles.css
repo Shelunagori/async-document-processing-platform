@@ -1,0 +1,160 @@
+:root {
+  --bg: #f4f7fb;
+  --surface: #ffffff;
+  --text: #102538;
+  --muted: #4e6070;
+  --primary: #0e7490;
+  --primary-dark: #0b5f76;
+  --border: #d6e2eb;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: "Segoe UI", "Trebuchet MS", sans-serif;
+  color: var(--text);
+  background: radial-gradient(circle at top, #e8f6ff, var(--bg) 45%);
+}
+
+.page {
+  max-width: 1040px;
+  margin: 0 auto;
+  padding: 24px 16px 40px;
+}
+
+.hero {
+  margin-bottom: 20px;
+}
+
+.hero h1 {
+  margin: 0 0 8px;
+  font-size: clamp(1.6rem, 2.4vw, 2.3rem);
+}
+
+.hero p {
+  margin: 0;
+  color: var(--muted);
+}
+
+.panel {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 16px;
+  margin-bottom: 14px;
+  box-shadow: 0 8px 24px rgba(21, 50, 72, 0.06);
+}
+
+.panel-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+}
+
+.grid-form {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.grid-form label {
+  display: grid;
+  gap: 6px;
+  font-size: 0.95rem;
+}
+
+.actions {
+  display: flex;
+  gap: 10px;
+  align-items: end;
+}
+
+.inline-form {
+  display: flex;
+  gap: 10px;
+}
+
+input {
+  width: 100%;
+  border: 1px solid var(--border);
+  border-radius: 9px;
+  padding: 10px 12px;
+  font: inherit;
+}
+
+button {
+  border: 0;
+  border-radius: 9px;
+  padding: 10px 14px;
+  background: var(--primary);
+  color: #fff;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+button:hover {
+  background: var(--primary-dark);
+}
+
+button.secondary {
+  background: #f3f8fb;
+  color: var(--text);
+  border: 1px solid var(--border);
+}
+
+.results {
+  margin-top: 12px;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 12px;
+}
+
+.result-card {
+  border: 1px solid var(--border);
+  border-radius: 11px;
+  padding: 10px 12px;
+  background: #fcfeff;
+}
+
+.result-card h3 {
+  margin: 0 0 8px;
+  font-size: 1rem;
+}
+
+.result-card p {
+  margin: 4px 0;
+  color: var(--muted);
+}
+
+.code-block {
+  background: #0d1f30;
+  color: #d8ebf8;
+  border-radius: 9px;
+  padding: 10px;
+  overflow: auto;
+  font-size: 0.84rem;
+}
+
+.message {
+  margin-top: 8px;
+  color: var(--primary-dark);
+  font-weight: 600;
+}
+
+@media (max-width: 760px) {
+  .grid-form {
+    grid-template-columns: 1fr;
+  }
+
+  .inline-form {
+    flex-direction: column;
+  }
+
+  button {
+    width: 100%;
+  }
+}
