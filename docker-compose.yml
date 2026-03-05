@@ -36,7 +36,7 @@ services:
       DJANGO_ALLOWED_HOSTS: ${DJANGO_ALLOWED_HOSTS:-*}
     command: >
       sh -c "python manage.py migrate --noinput &&
-      gunicorn config.wsgi:application --bind 0.0.0.0:8000 --workers 3 --timeout 120"
+      gunicorn config.wsgi:application --bind 0.0.0.0:8000 --workers ${GUNICORN_WORKERS:-3} --timeout 120"
     depends_on:
       db:
         condition: service_healthy
@@ -60,7 +60,10 @@ services:
       REDIS_URL: ${REDIS_URL:-redis://redis:6379/1}
       DJANGO_DEBUG: ${DJANGO_DEBUG:-False}
       DJANGO_ALLOWED_HOSTS: ${DJANGO_ALLOWED_HOSTS:-*}
-    command: celery -A config worker --loglevel=INFO
+    command: >
+      sh -c "celery -A config worker --loglevel=INFO
+      --concurrency=${CELERY_WORKER_CONCURRENCY:-4}
+      --prefetch-multiplier=${CELERY_WORKER_PREFETCH_MULTIPLIER:-1}"
     depends_on:
       db:
         condition: service_healthy

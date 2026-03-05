@@ -1,10 +1,12 @@
 from __future__ import annotations
 
+import logging
 import os
 from datetime import timedelta
 from pathlib import Path
 
 import dj_database_url
+import structlog
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -34,6 +36,7 @@ MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
+    "apps.documents.middleware.UploadRateLimitMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
@@ -92,6 +95,25 @@ AUTH_USER_MODEL = "users.User"
 
 DOC_MAX_UPLOAD_SIZE = int(os.getenv("DOC_MAX_UPLOAD_SIZE", str(10 * 1024 * 1024)))
 SEARCH_CACHE_TIMEOUT = int(os.getenv("SEARCH_CACHE_TIMEOUT", "300"))
+UPLOADS_PER_MINUTE = int(os.getenv("UPLOADS_PER_MINUTE", "20"))
+BATCH_MAX_FILES = int(os.getenv("BATCH_MAX_FILES", "25"))
+BATCH_MAX_UPLOAD_SIZE = int(os.getenv("BATCH_MAX_UPLOAD_SIZE", str(60 * 1024 * 1024)))
+BATCH_MAX_UNCOMPRESSED_SIZE = int(os.getenv("BATCH_MAX_UNCOMPRESSED_SIZE", str(200 * 1024 * 1024)))
+DOCX_MAX_UNCOMPRESSED_SIZE = int(os.getenv("DOCX_MAX_UNCOMPRESSED_SIZE", str(60 * 1024 * 1024)))
+DOCX_MAX_COMPRESSION_RATIO = int(os.getenv("DOCX_MAX_COMPRESSION_RATIO", "100"))
+PIPELINE_CHUNK_SIZE = int(os.getenv("PIPELINE_CHUNK_SIZE", "1200"))
+PIPELINE_CHUNK_OVERLAP = int(os.getenv("PIPELINE_CHUNK_OVERLAP", "150"))
+PIPELINE_CHUNK_PARALLELISM = int(os.getenv("PIPELINE_CHUNK_PARALLELISM", "4"))
+METRICS_AUTH_TOKEN = os.getenv("METRICS_AUTH_TOKEN", "")
+
+DOC_ALLOWED_MIME_TYPES = {
+    ".pdf": {"application/pdf", "application/x-pdf", "application/octet-stream"},
+    ".docx": {
+        "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+        "application/zip",
+        "application/octet-stream",
+    },
+}
 
 REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": (
@@ -142,6 +164,7 @@ CELERY_RESULT_SERIALIZER = "json"
 CELERY_TIMEZONE = TIME_ZONE
 CELERY_TASK_TRACK_STARTED = True
 CELERY_TASK_TIME_LIMIT = int(os.getenv("CELERY_TASK_TIME_LIMIT", "900"))
+CELERY_WORKER_PREFETCH_MULTIPLIER = int(os.getenv("CELERY_WORKER_PREFETCH_MULTIPLIER", "1"))
 CELERY_TASK_ALWAYS_EAGER = os.getenv("CELERY_TASK_ALWAYS_EAGER", "False").lower() in {
     "1",
     "true",
@@ -163,7 +186,7 @@ LOGGING = {
     "disable_existing_loggers": False,
     "formatters": {
         "standard": {
-            "format": "%(asctime)s [%(levelname)s] %(name)s: %(message)s",
+            "format": "%(asctime)s %(levelname)s %(name)s %(message)s",
         }
     },
     "handlers": {
@@ -177,3 +200,17 @@ LOGGING = {
         "level": os.getenv("DJANGO_LOG_LEVEL", "INFO"),
     },
 }
+
+LOG_LEVEL = os.getenv("DJANGO_LOG_LEVEL", "INFO").upper()
+structlog.configure(
+    processors=[
+        structlog.processors.TimeStamper(fmt="iso"),
+        structlog.processors.add_log_level,
+        structlog.processors.StackInfoRenderer(),
+        structlog.processors.format_exc_info,
+        structlog.processors.JSONRenderer(),
+    ],
+    logger_factory=structlog.stdlib.LoggerFactory(),
+    wrapper_class=structlog.make_filtering_bound_logger(getattr(logging, LOG_LEVEL, logging.INFO)),
+    cache_logger_on_first_use=True,
+)

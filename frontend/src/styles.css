@@ -130,6 +130,17 @@ button.secondary {
   color: var(--muted);
 }
 
+.result-card button {
+  margin-top: 8px;
+  width: 100%;
+}
+
+.hint {
+  margin: 8px 0 0;
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
 .code-block {
   background: #0d1f30;
   color: #d8ebf8;

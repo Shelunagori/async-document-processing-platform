@@ -50,3 +50,31 @@ class Document(models.Model):
 
     def __str__(self) -> str:
         return f"{self.original_filename} ({self.status})"
+
+
+class DocumentChunk(models.Model):
+    document = models.ForeignKey(
+        Document,
+        on_delete=models.CASCADE,
+        related_name="chunks",
+    )
+    chunk_index = models.PositiveIntegerField()
+    content = models.TextField()
+    embedding = models.JSONField(default=list, blank=True)
+    metadata = models.JSONField(default=dict, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["document", "chunk_index"]
+        constraints = [
+            models.UniqueConstraint(
+                fields=["document", "chunk_index"],
+                name="unique_doc_chunk_index",
+            )
+        ]
+        indexes = [
+            models.Index(fields=["document", "chunk_index"], name="doc_chunk_lookup_idx"),
+        ]
+
+    def __str__(self) -> str:
+        return f"{self.document_id}:{self.chunk_index}"

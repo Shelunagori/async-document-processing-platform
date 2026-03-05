@@ -8,7 +8,7 @@ from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APITestCase
 
-from apps.documents.models import Document, DocumentStatus
+from apps.documents.models import Document, DocumentChunk, DocumentStatus
 from apps.processing.models import ProcessingStatus, ProcessingTask
 from apps.processing.tasks import process_document_task
 
@@ -56,6 +56,7 @@ class ProcessingTaskTests(APITestCase):
         self.assertEqual(document.status, DocumentStatus.PROCESSED)
         self.assertEqual(document.summary, "Short summary.")
         self.assertEqual(task.status, ProcessingStatus.SUCCESS)
+        self.assertGreater(DocumentChunk.objects.filter(document=document).count(), 0)
         mock_extract.assert_called_once()
         mock_summary.assert_called_once()
 

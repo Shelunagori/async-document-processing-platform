@@ -40,6 +40,12 @@ export async function uploadDocument(token, file) {
   return apiRequest('/documents/upload/', { method: 'POST', token, body: formData, isForm: true });
 }
 
+export async function uploadBatch(token, archive) {
+  const formData = new FormData();
+  formData.append('archive', archive);
+  return apiRequest('/documents/upload-batch/', { method: 'POST', token, body: formData, isForm: true });
+}
+
 export async function listDocuments(token) {
   return apiRequest('/documents/', { token });
 }
@@ -50,4 +56,31 @@ export async function getTask(token, taskId) {
 
 export async function searchDocuments(token, query) {
   return apiRequest(`/search/documents/?q=${encodeURIComponent(query)}`, { token });
+}
+
+export async function downloadProcessedResult(token, documentId) {
+  const response = await fetch(`${API_BASE_URL}/documents/${documentId}/download/`, {
+    method: 'GET',
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+
+  if (!response.ok) {
+    const text = await response.text();
+    let message = text;
+    try {
+      const parsed = JSON.parse(text);
+      message = parsed.detail || text;
+    } catch (_error) {
+      message = text;
+    }
+    throw new Error(message || 'Download failed');
+  }
+
+  const blob = await response.blob();
+  const disposition = response.headers.get('content-disposition') || '';
+  const match = disposition.match(/filename=\"?([^\";]+)\"?/i);
+  const filename = match ? match[1] : 'processed-document.txt';
+  return { blob, filename };
 }
